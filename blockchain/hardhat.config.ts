@@ -29,10 +29,14 @@ export default defineConfig({
       chainType: "op",
     },
     sepolia: {
-      type: "http",
-      chainType: "l1",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
-    },
+  type: "http",
+  chainType: "l1",
+  url: configVariable("SEPOLIA_RPC_URL"),
+  accounts: [
+    configVariable("SEPOLIA_PRIVATE_KEY"),
+    configVariable("DISTRIBUTOR_PRIVATE_KEY"),
+    configVariable("PHARMACY_PRIVATE_KEY"),
+    ],
+   },
   },
 });

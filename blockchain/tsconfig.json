@@ -1,11 +1,19 @@
 {
   "compilerOptions": {
     "lib": ["es2023"],
-    "module": "node20",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "target": "es2023",
     "skipLibCheck": true,
     "outDir": "dist",
     "types": ["node", "mocha"],
     "verbatimModuleSyntax": true
-  }
+  },
+  "include": [
+    "./**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
