@@ -1,32 +1,29 @@
 "use client";
 
-import { KeyboardEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { verifyBatch as verifyBatchService } from "../../services/verificationService";
-import type { Batch } from "../../data/batches";
 
 export default function VerificationPage() {
   const [batchId, setBatchId] = useState("");
   const [searchedId, setSearchedId] = useState("");
-  const [currentBatch, setCurrentBatch] = useState<Batch | null>(null);
+  const [currentBatch, setCurrentBatch] = useState(null);
 
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [scannerStatus, setScannerStatus] = useState<
-    "starting" | "scanning" | "detected" | "error"
-  >("starting");
+  const [scannerStatus, setScannerStatus] = useState("starting");
 
-  const scannerRef = useRef<any>(null);
+  const scannerRef = useRef(null);
 
   /* =========================================
      VERIFY MEDICINE
   ========================================= */
 
-  async function verifyBatch(id?: string) {
-    const value = (id ?? batchId).trim().toUpperCase();
+  async function verifyBatch(id) {
+    const value = String(id || batchId).trim().toUpperCase();
 
     if (!value) {
       setSearched(false);
@@ -45,9 +42,14 @@ export default function VerificationPage() {
 
     try {
       const result = await verifyBatchService(value);
-      setCurrentBatch(result);
+
+      if (result) {
+        setCurrentBatch(result);
+      } else {
+        setCurrentBatch(null);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Verification error:", err);
 
       setError(
         "Unable to connect to the verification service. Please try again."
@@ -61,9 +63,9 @@ export default function VerificationPage() {
      ENTER KEY
   ========================================= */
 
-  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+  function handleKeyDown(event) {
     if (event.key === "Enter") {
-      verifyBatch();
+      verifyBatch(batchId)
     }
   }
 
@@ -76,7 +78,7 @@ export default function VerificationPage() {
       return;
     }
 
-    let scanner: any;
+    let scanner = null;
     let cancelled = false;
 
     async function startScanner() {
@@ -103,12 +105,13 @@ export default function VerificationPage() {
             },
             aspectRatio: 1,
           },
-          async (decodedText: string) => {
+
+          async (decodedText) => {
             if (!decodedText || cancelled) {
               return;
             }
 
-            const id = decodedText.trim().toUpperCase();
+            const id = String(decodedText).trim().toUpperCase();
 
             if (!id) {
               return;
@@ -131,8 +134,9 @@ export default function VerificationPage() {
               }
             }, 500);
           },
+
           () => {
-            // Ignore continuous QR search errors.
+            // Ignore continuous QR scanning errors.
           }
         );
 
@@ -144,6 +148,7 @@ export default function VerificationPage() {
 
         if (!cancelled) {
           setScannerStatus("error");
+
           setError(
             "Camera access failed. Please allow camera permission and try again."
           );
@@ -157,7 +162,10 @@ export default function VerificationPage() {
       cancelled = true;
 
       if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
+        scannerRef.current
+          .stop()
+          .catch(() => {});
+
         scannerRef.current = null;
       }
     };
@@ -172,7 +180,7 @@ export default function VerificationPage() {
       try {
         await scannerRef.current.stop();
       } catch {
-        // Already stopped.
+        // Scanner already stopped.
       }
 
       scannerRef.current = null;
@@ -186,7 +194,8 @@ export default function VerificationPage() {
      RESULT STATE
   ========================================= */
 
-  const isExpired = currentBatch?.status === "EXPIRED";
+  const isExpired =
+    currentBatch?.status === "EXPIRED";
 
   return (
     <>
@@ -202,10 +211,6 @@ export default function VerificationPage() {
           padding-bottom: 70px;
           font-family: Arial, Helvetica, sans-serif;
         }
-
-        /* =====================================
-           HEADER
-        ===================================== */
 
         .verification-header {
           background: #FFFFFF;
@@ -232,10 +237,6 @@ export default function VerificationPage() {
           letter-spacing: 0.7px;
           text-transform: uppercase;
         }
-
-        /* =====================================
-           CONTENT
-        ===================================== */
 
         .verification-content {
           width: min(1120px, 88%);
@@ -267,10 +268,6 @@ export default function VerificationPage() {
           line-height: 1.6;
           max-width: 680px;
         }
-
-        /* =====================================
-           VERIFY CARD
-        ===================================== */
 
         .verify-card {
           margin-top: 28px;
@@ -360,10 +357,6 @@ export default function VerificationPage() {
           background: #ECFEFF;
         }
 
-        /* =====================================
-           DEMO
-        ===================================== */
-
         .demo-row {
           display: flex;
           align-items: center;
@@ -390,10 +383,6 @@ export default function VerificationPage() {
           background: #ECFEFF;
           color: #0891B2;
         }
-
-        /* =====================================
-           LOADING
-        ===================================== */
 
         .loading-card {
           margin-top: 24px;
@@ -431,10 +420,6 @@ export default function VerificationPage() {
           color: #64748B;
           font-size: 13px;
         }
-
-        /* =====================================
-           STATUS
-        ===================================== */
 
         .status-card {
           margin-top: 24px;
@@ -512,10 +497,6 @@ export default function VerificationPage() {
           font-weight: 800;
         }
 
-        /* =====================================
-           RESULT CARDS
-        ===================================== */
-
         .section-card {
           margin-top: 20px;
           background: #FFFFFF;
@@ -559,10 +540,6 @@ export default function VerificationPage() {
           font-weight: 700;
         }
 
-        /* =====================================
-           DETAILS
-        ===================================== */
-
         .details-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
@@ -589,10 +566,6 @@ export default function VerificationPage() {
           font-size: 14px;
           font-weight: 750;
         }
-
-        /* =====================================
-           TIMELINE
-        ===================================== */
 
         .timeline {
           position: relative;
@@ -665,10 +638,6 @@ export default function VerificationPage() {
           font-size: 10px;
         }
 
-        /* =====================================
-           BLOCKCHAIN
-        ===================================== */
-
         .blockchain-section {
           margin-top: 20px;
           background: #0B1F3A;
@@ -713,10 +682,6 @@ export default function VerificationPage() {
         .blockchain-confirmed {
           color: #6EE7B7 !important;
         }
-
-        /* =====================================
-           NOT VERIFIED
-        ===================================== */
 
         .not-verified {
           margin-top: 24px;
@@ -790,10 +755,6 @@ export default function VerificationPage() {
         .retry-button:hover {
           background: #0E7490;
         }
-
-        /* =====================================
-           QR MODAL
-        ===================================== */
 
         .qr-overlay {
           position: fixed;
@@ -958,10 +919,6 @@ export default function VerificationPage() {
           font-size: 10px;
         }
 
-        /* =====================================
-           MOBILE
-        ===================================== */
-
         @media (max-width: 800px) {
           .verification-content {
             width: 92%;
@@ -1104,7 +1061,7 @@ export default function VerificationPage() {
 
               <button
                 className="verify-button"
-                onClick={() => verifyBatch()}
+                onClick={() => verifyBatch(batchId)}
                 disabled={loading}
               >
                 {loading
@@ -1209,7 +1166,7 @@ export default function VerificationPage() {
             </section>
           )}
 
-          {/* FAKE / UNKNOWN */}
+          {/* UNKNOWN BATCH */}
 
           {searched &&
             !loading &&
@@ -1240,6 +1197,13 @@ export default function VerificationPage() {
                   ⚠ Do not trust or dispense this medicine.
                 </div>
 
+                <button
+                  className="retry-button"
+                  onClick={() => verifyBatch(searchedId)}
+                >
+                  TRY AGAIN
+                </button>
+
               </section>
             )}
 
@@ -1250,6 +1214,8 @@ export default function VerificationPage() {
             !error &&
             currentBatch && (
               <>
+
+                {/* STATUS */}
 
                 <section
                   className={
@@ -1393,7 +1359,7 @@ export default function VerificationPage() {
 
                   <div className="timeline">
 
-                    {currentBatch.journey.map(
+                    {(currentBatch.journey || []).map(
                       (step, index) => (
                         <div
                           className="timeline-item"
@@ -1499,7 +1465,7 @@ export default function VerificationPage() {
 
         </div>
 
-        {/* QR MODAL */}
+        {/* QR SCANNER MODAL */}
 
         {scannerOpen && (
           <div className="qr-overlay">
