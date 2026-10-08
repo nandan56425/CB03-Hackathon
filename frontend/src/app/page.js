@@ -220,9 +220,12 @@ setForm({
   Transfers
 </Link>
 
-          <div className="mb-2 rounded-lg px-4 py-3 text-slate-300 hover:bg-slate-800">
-            Verification
-          </div>
+          <Link
+  href="/verify"
+  className="mb-2 block rounded-lg px-4 py-3 text-slate-300 hover:bg-slate-800"
+>
+  Verification
+</Link>
         </nav>
 
         <div className="absolute bottom-6 left-6 right-6 rounded-lg bg-slate-800 p-4">
